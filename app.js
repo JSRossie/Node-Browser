@@ -35,6 +35,10 @@ function createWindow(url) {
 
     mainWindow.loadURL(url);
 
+    mainWindow.webContents.on('did-finish-load', () => {
+        mainWindow.webContents.insertCSS("body { cursor: none; }");
+    });
+
     mainWindow.on('closed', function () {
         mainWindow = null;
     });
