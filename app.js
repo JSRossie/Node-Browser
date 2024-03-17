@@ -17,10 +17,8 @@ server.use(bodyParser.json());
 
 let mainWindow;
 
-app.commandLine.appendSwitch('ignore-gpu-blacklist');
-app.commandLine.appendSwitch('disable-gpu');
-app.disableHardwareAcceleration();
 
+const { Menu } = require('electron');
 function createWindow(url) {
     mainWindow = new BrowserWindow({
         fullscreen: true,
@@ -31,6 +29,8 @@ function createWindow(url) {
 
     // Hide the menu bar
     mainWindow.setMenuBarVisibility(false);
+    mainWindow.setAutoHideMenuBar(true);
+    mainWindwo.setMenu(null);
     mainWindow.loadURL(url);
 }
 function createWindow(url) {
