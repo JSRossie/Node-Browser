@@ -1,3 +1,12 @@
+const fs = require('fs');
+
+// Read the JSON file
+const data = fs.readFileSync('config.json', 'utf8');
+
+// Parse the JSON file to get the default URL
+const defaultUrl = JSON.parse(data).url;
+const defaultPort = JSON.parse(data).port;
+
 const { app, BrowserWindow } = require('electron');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -5,9 +14,6 @@ const bodyParser = require('body-parser');
 // Create the Express app
 const server = express();
 server.use(bodyParser.json());
-
-// Port for the Express app
-const PORT = 5001;
 
 let mainWindow;
 
@@ -49,11 +55,11 @@ server.post('/set_url', (req, res) => {
     res.json({ success: true, url: url });
 });
 
-server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+server.listen(defaultPort, () => {
+    console.log(`Server running on port ${defaultPort}`);
 });
 
-app.on('ready', () => createWindow('https://google.com'));
+app.on('ready', () => createWindow(defaultUrl));
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
@@ -63,6 +69,6 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
     if (mainWindow === null) {
-        createWindow('http://google.com');
+        createWindow(defaultUrl);
     }
 });
