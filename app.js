@@ -29,6 +29,8 @@ function createWindow(url) {
         }
     });
 
+    // Hide the menu bar
+    mainWindow.setMenuBarVisibility(false);
     mainWindow.loadURL(url);
 }
 function createWindow(url) {
