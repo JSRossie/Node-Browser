@@ -53,6 +53,29 @@ server.post('/set_url', (req, res) => {
     res.json({ success: true, url: url });
 });
 
+// Handle multiple URL changes
+server.post('/multi_url', (req, res) => {
+    const urls = req.body.urls;
+    const duration = req.body.duration;
+
+    if (mainWindow) {
+        let currentIndex = 0;
+
+        const displayNextUrl = () => {
+            const url = urls[currentIndex];
+            mainWindow.loadURL(url);
+
+            currentIndex = (currentIndex + 1) % urls.length;
+
+            setTimeout(displayNextUrl, duration * 1000);
+        };
+
+        displayNextUrl();
+    }
+
+    res.json({ success: true, urls: urls, duration: duration });
+});
+
 server.listen(defaultPort, () => {
     console.log(`Server running on port ${defaultPort}`);
 });
