@@ -16,8 +16,6 @@ const server = express();
 server.use(bodyParser.json());
 
 let mainWindow;
-
-
 const { Menu } = require('electron');
 function createWindow(url) {
     mainWindow = new BrowserWindow({
@@ -43,7 +41,7 @@ function createWindow(url) {
         mainWindow = null;
     });
 }
-
+/*
 // Create a variable to control the loop
 let shouldContinueLoop = true;
 
@@ -80,6 +78,78 @@ server.post('/multi_url', (req, res) => {
     }
 
     res.json({ success: true, urls: urls, duration: duration });
+});
+*/
+
+let windows = [];
+let timeoutId;
+
+// Handle multiple URL changes with different durations
+server.post('/set_urls', (req, res) => {
+    const urls = req.body.urls;
+    const durations = req.body.durations;
+
+    if (urls.length !== durations.length) {
+        res.json({ success: false, message: 'The number of URLs and durations must be the same.' });
+        return;
+    }
+
+    // Clear any existing timeouts
+    if (timeoutId) {
+        clearTimeout(timeoutId);
+    }
+
+    // Close the mainWindow
+    if (mainWindow) {
+        mainWindow.close();
+    }
+
+    // Close any existing windows
+    windows.forEach(win => win.close());
+    windows = [];
+
+    // Create a new BrowserWindow for each URL
+    urls.forEach((url, index) => {
+        let win = new BrowserWindow({
+            show: false,
+            autoHideMenuBar: true,
+            webPreferences: {
+                nodeIntegration: true
+            }
+        });
+
+        win.loadURL(url);
+
+        // Wait for the window to be ready before showing it in full screen mode
+        win.once('ready-to-show', () => {
+            win.setFullScreen(true);
+            if (index === 0) {
+                win.show();
+            }
+        });
+
+        windows.push(win);
+    });
+
+    // Cycle through the windows according to the specified durations
+    let currentIndex = 0;
+    const displayNextWindow = () => {
+        windows[currentIndex].hide();
+        currentIndex = (currentIndex + 1) % windows.length;
+        windows[currentIndex].show();
+
+        // If the duration is 0, display the URL indefinitely
+        if (durations[currentIndex] !== 0) {
+            timeoutId = setTimeout(displayNextWindow, durations[currentIndex] * 1000);
+        }
+    };
+
+    // Start the cycle with the first URL
+    if (durations[0] !== 0) {
+        timeoutId = setTimeout(displayNextWindow, durations[0] * 1000);
+    }
+
+    res.json({ success: true, urls: urls, durations: durations });
 });
 
 server.listen(defaultPort, () => {
