@@ -84,17 +84,6 @@ server.post('/multi_url', (req, res) => {
 let windows = [];
 let timeoutId;
 
-// Create a background window to better hide transitions
-let backgroundWindow = new BrowserWindow({
-    fullscreen: true,
-    autoHideMenuBar: true,
-    backgroundColor: '#A9A9A9', 
-    webPreferences: {
-        nodeIntegration: true
-    }
-});
-//backgroundWindow.loadURL('file://path/to/your/background.html'); // Load a local HTML file or a remote URL
-
 
 // Handle multiple URL changes with different durations
 server.post('/set_urls', (req, res) => {
@@ -178,6 +167,17 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
+    // Create a background window to better hide transitions
+    let backgroundWindow = new BrowserWindow({
+        fullscreen: true,
+        autoHideMenuBar: true,
+        backgroundColor: '#A9A9A9', 
+        webPreferences: {
+            nodeIntegration: true
+        }
+    });
+    //backgroundWindow.loadURL('file://path/to/your/background.html'); // Load a local HTML file or a remote URL
+
     if (mainWindow === null) {
         createWindow(defaultUrl);
     }
