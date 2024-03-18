@@ -15,11 +15,38 @@ const bodyParser = require('body-parser');
 const server = express();
 server.use(bodyParser.json());
 
+// Initial setup for the background window
+let backgroundWindow;
+
+function createBackgroundWindow() {
+    backgroundWindow = new BrowserWindow({
+        fullscreen: true,
+        frame: false,
+        movable: false,
+        resizable: false,
+        webPreferences: {
+            nodeIntegration: true
+        },
+        backgroundColor: '#505050' // Change to desired background color
+    });
+
+    // Optionally load a local HTML file with the solid color
+    // backgroundWindow.loadURL('file://path/to/your/solid-color.html');
+}
+
+// Initial setup for mainWindow
 let mainWindow;
 const { Menu } = require('electron');
 function createWindow(url) {
+    
+    // Ensure the background window is created first
+    if (!backgroundWindow) {
+        createBackgroundWindow();
+    }
+
     mainWindow = new BrowserWindow({
         fullscreen: true,
+        show: false,
         webPreferences: {
             nodeIntegration: true
         }
@@ -29,61 +56,24 @@ function createWindow(url) {
     mainWindow.setMenuBarVisibility(false);
     mainWindow.setAutoHideMenuBar(true);
     mainWindow.setMenu(null);
+    
     mainWindow.loadURL(url);
-
-    mainWindow.loadURL(url);
-
+    mainWindow.once('ready-to-show', () => {
+        mainWindow.setFullScreen(true); // Set the window to full screen once it's ready to show
+        mainWindow.show();
+    });
+/*
     mainWindow.webContents.on('did-finish-load', () => {
         mainWindow.webContents.insertCSS("body { cursor: none; }");
     });
-
+*/
     mainWindow.on('closed', function () {
         mainWindow = null;
     });
 }
-/*
-// Create a variable to control the loop
-let shouldContinueLoop = true;
-
-// Handle URL changes
-server.post('/set_url', (req, res) => {
-    const url = req.body.url;
-    if (mainWindow) {
-        mainWindow.loadURL(url);
-        shouldContinueLoop = false; // Stop the /multi_url loop
-    }
-    res.json({ success: true, url: url });
-});
-
-// Handle multiple URL changes
-server.post('/multi_url', (req, res) => {
-    const urls = req.body.urls;
-    const duration = req.body.duration;
-
-    if (mainWindow) {
-        let currentIndex = 0;
-        shouldContinueLoop = true; // Start the /multi_url loop
-
-        const displayNextUrl = () => {
-            if (!shouldContinueLoop) return; // Exit the loop if shouldContinueLoop is false
-            const url = urls[currentIndex];
-            mainWindow.loadURL(url);
-
-            currentIndex = (currentIndex + 1) % urls.length;
-
-            setTimeout(displayNextUrl, duration * 1000);
-        };
-
-        displayNextUrl();
-    }
-
-    res.json({ success: true, urls: urls, duration: duration });
-});
-*/
 
 let windows = [];
 let timeoutId;
-
 
 // Handle multiple URL changes with different durations
 server.post('/set_urls', (req, res) => {
@@ -95,19 +85,21 @@ server.post('/set_urls', (req, res) => {
         return;
     }
 
-    // Clear any existing timeouts
-    if (timeoutId) {
-        clearTimeout(timeoutId);
-    }
-
     // Close the mainWindow
     if (mainWindow) {
         mainWindow.close();
     }
 
-    // Close any existing windows
-    windows.forEach(win => win.close());
-    windows = [];
+    // Clear any existing timeouts and close previous windows except for the background
+    if (timeoutId) {
+        clearTimeout(timeoutId);
+    }
+    windows.forEach(win => {
+        if (win !== backgroundWindow) { // Ensure not to close the background window
+            win.close();
+        }
+    });
+    windows = []; // Reset the windows array, keeping only the background window
 
     // Create a new BrowserWindow for each URL
     urls.forEach((url, index) => {
@@ -116,7 +108,8 @@ server.post('/set_urls', (req, res) => {
             autoHideMenuBar: true,
             backgroundColor: '#A9A9A9', // Set the background color to 'dark gray
             webPreferences: {
-                nodeIntegration: true
+                nodeIntegration: true,
+                nodeIntegrationInWorker: true
             }
         });
 
@@ -136,9 +129,11 @@ server.post('/set_urls', (req, res) => {
     // Cycle through the windows according to the specified durations
     let currentIndex = 0;
     const displayNextWindow = () => {
-        windows[currentIndex].hide();
+        //windows[currentIndex].hide();
+        
         currentIndex = (currentIndex + 1) % windows.length;
-        windows[currentIndex].show();
+        //windows[currentIndex].show();
+        windows[currentIndex].moveTop();
 
         // If the duration is 0, display the URL indefinitely
         if (durations[currentIndex] !== 0) {
@@ -167,18 +162,21 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
-    // Create a background window to better hide transitions
-    let backgroundWindow = new BrowserWindow({
-        fullscreen: true,
-        autoHideMenuBar: true,
-        backgroundColor: '#A9A9A9', 
-        webPreferences: {
-            nodeIntegration: true
-        }
-    });
-    //backgroundWindow.loadURL('file://path/to/your/background.html'); // Load a local HTML file or a remote URL
-
+    
     if (mainWindow === null) {
         createWindow(defaultUrl);
     }
 });
+
+
+/*
+
+In Electron, when a BrowserWindow is hidden, its rendering is paused but the page stays loaded in memory. So, when you hide and then show a window, the page should appear just as it was before it was hidden.
+
+However, if you're experiencing issues with pages not staying loaded when their window is not in the foreground, it might be due to the web pages themselves. Some web pages might unload or reset their content when they lose focus or visibility, and there's not much you can do about this in Electron.
+
+If you're trying to keep a page active even when its window is not in the foreground, you might need to use a different approach. Instead of using multiple windows and showing/hiding them, you could use a single window and load the different URLs in an offscreen BrowserView. Then, you can switch the BrowserView instances in and out of the window as needed. This should keep the pages active even when they're not currently being displayed.
+
+Please note that this approach is more complex and might not work for all use cases. It also has its own set of limitations and potential issues, such as increased memory usage.
+
+*/

@@ -1,3 +1,3 @@
-curl -X POST http://localhost:5001/set_url -H "Content-Type: application/json" -d '{"url": "https://aviationweather.gov/gfa/?tab=obs&basemap=esriDark&layers=rad,fltcat&center=30.987,-97.965&zoom=6&gui=0"}'
+curl -X POST http://192.168.92.101:5001/set_url -H "Content-Type: application/json" -d '{"url": "https://aviationweather.gov/gfa/?tab=obs&basemap=esriDark&layers=rad,fltcat&center=30.987,-97.965&zoom=6&gui=0"}'
 
 curl -X POST http://localhost:5001/set_url -H "Content-Type: application/json" -d '{"url": "https://www.google.com"}'
