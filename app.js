@@ -44,11 +44,15 @@ function createWindow(url) {
     });
 }
 
+// Create a variable to control the loop
+let shouldContinueLoop = true;
+
 // Handle URL changes
 server.post('/set_url', (req, res) => {
     const url = req.body.url;
     if (mainWindow) {
         mainWindow.loadURL(url);
+        shouldContinueLoop = false; // Stop the /multi_url loop
     }
     res.json({ success: true, url: url });
 });
@@ -60,30 +64,16 @@ server.post('/multi_url', (req, res) => {
 
     if (mainWindow) {
         let currentIndex = 0;
-
-        // Create a second BrowserWindow for the fade effect
-        let fadeWindow = new BrowserWindow({
-            fullscreen: true,
-            show: false,
-            backgroundColor: '#000000',
-            webPreferences: {
-                nodeIntegration: true
-            }
-        });
+        shouldContinueLoop = true; // Start the /multi_url loop
 
         const displayNextUrl = () => {
+            if (!shouldContinueLoop) return; // Exit the loop if shouldContinueLoop is false
             const url = urls[currentIndex];
             mainWindow.loadURL(url);
 
-            // Show the fadeWindow over the mainWindow
-            fadeWindow.show();
+            currentIndex = (currentIndex + 1) % urls.length;
 
-            // After a brief delay, hide the fadeWindow and show the new URL
-            setTimeout(() => {
-                fadeWindow.hide();
-                currentIndex = (currentIndex + 1) % urls.length;
-                setTimeout(displayNextUrl, duration * 1000);
-            }, 200); // Adjust this value to change the length of the fade effect
+            setTimeout(displayNextUrl, duration * 1000);
         };
 
         displayNextUrl();
