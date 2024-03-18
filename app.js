@@ -61,13 +61,29 @@ server.post('/multi_url', (req, res) => {
     if (mainWindow) {
         let currentIndex = 0;
 
+        // Create a second BrowserWindow for the fade effect
+        let fadeWindow = new BrowserWindow({
+            fullscreen: true,
+            show: false,
+            backgroundColor: '#000000',
+            webPreferences: {
+                nodeIntegration: true
+            }
+        });
+
         const displayNextUrl = () => {
             const url = urls[currentIndex];
             mainWindow.loadURL(url);
 
-            currentIndex = (currentIndex + 1) % urls.length;
+            // Show the fadeWindow over the mainWindow
+            fadeWindow.show();
 
-            setTimeout(displayNextUrl, duration * 1000);
+            // After a brief delay, hide the fadeWindow and show the new URL
+            setTimeout(() => {
+                fadeWindow.hide();
+                currentIndex = (currentIndex + 1) % urls.length;
+                setTimeout(displayNextUrl, duration * 1000);
+            }, 200); // Adjust this value to change the length of the fade effect
         };
 
         displayNextUrl();
