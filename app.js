@@ -86,6 +86,7 @@ function switchView(durations) {
 app.on('ready', () => {
     mainWindow = new BrowserWindow({
         fullscreen: true,
+        menuBarVisible: false,
         backgroundColor: '#232227',
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
