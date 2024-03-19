@@ -13,4 +13,4 @@ REM Install dependencies
 npm install
 
 REM Start the application
-npm start
+node app.js
