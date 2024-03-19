@@ -3,7 +3,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { app, BrowserWindow, BrowserView } = require('electron');
 const path = require('path'); 
-const robot = require('robotjs');
 
 // Read and parse the configuration file
 const configData = fs.readFileSync('config.json', 'utf8');
@@ -102,10 +101,6 @@ app.on('ready', () => {
     // Switch to the first view with indefinite display
     switchView([0]);
 
-    // Hide the cursor
-    setInterval(() => {
-        robot.moveMouse(0, 0);
-    }, 1000); // Apply the style every 1000 milliseconds
 });
 
 // Handle POST request to change URLs with durations
