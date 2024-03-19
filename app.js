@@ -1,182 +1,131 @@
 const fs = require('fs');
-
-// Read the JSON file
-const data = fs.readFileSync('config.json', 'utf8');
-
-// Parse the JSON file to get the default URL
-const defaultUrl = JSON.parse(data).url;
-const defaultPort = JSON.parse(data).port;
-
-const { app, BrowserWindow } = require('electron');
 const express = require('express');
 const bodyParser = require('body-parser');
+const { app, BrowserWindow, BrowserView } = require('electron');
+const path = require('path'); 
+
+// Read and parse the configuration file
+const configData = fs.readFileSync('config.json', 'utf8');
+const { url: defaultUrl, port: defaultPort } = JSON.parse(configData);
 
 // Create the Express app
 const server = express();
 server.use(bodyParser.json());
 
-// Initial setup for the background window
-let backgroundWindow;
+let mainWindow;
+let views = [];
+let timeoutId;
+let currentIndex = 0;
 
-function createBackgroundWindow() {
-    backgroundWindow = new BrowserWindow({
-        fullscreen: true,
-        frame: false,
-        movable: false,
-        resizable: false,
-        webPreferences: {
-            nodeIntegration: true
-        },
-        backgroundColor: '#505050' // Change to desired background color
+// Function to create a new BrowserView and load a URL
+function createView(url) {
+    const view = new BrowserView(
+        {
+            //backgroundColor: '#232227',
+            webPreferences: {
+                preload: path.join(__dirname, 'preload.js'),
+                nodeIntegration: false,
+                contextIsolation: true // Adjust according to security needs
+            }
+        }
+    );
+    view.webContents.loadURL(url).then(() => {
+        console.log(`Loaded URL: ${url}`);
+    }).catch(error => {
+        console.error(`Failed to load URL ${url}: ${error}`);
     });
-
-    // Optionally load a local HTML file with the solid color
-    // backgroundWindow.loadURL('file://path/to/your/solid-color.html');
+    views.push(view);
 }
 
-// Initial setup for mainWindow
-let mainWindow;
-const { Menu } = require('electron');
-function createWindow(url) {
-    
-    // Ensure the background window is created first
-    if (!backgroundWindow) {
-        createBackgroundWindow();
-    }
+function switchView(durations) {
+    if (views.length === 0) return; // Exit if no views to switch
 
+    // Clear any existing timeout to prevent unexpected behavior
+    clearTimeout(timeoutId);
+
+    const currentView = views[currentIndex];
+    // Immediately set the view to be displayed to ensure it's visible
+    mainWindow.setBrowserView(currentView);
+    const bounds = { x: 0, y: 0, width: mainWindow.getBounds().width, height: mainWindow.getBounds().height };
+    currentView.setBounds(bounds);
+
+    // Use the did-finish-load event to wait for the content to load before setting up the next switch
+    currentView.webContents.once('did-finish-load', () => {
+        console.log(`View ${currentIndex} finished loading.`);
+        // Set the timeout for the next view switch based on the provided duration
+        const duration = durations[currentIndex] !== undefined ? durations[currentIndex] * 1000 : 0;
+        if (duration > 0) {
+            timeoutId = setTimeout(() => {
+                // Proceed to the next index and switch view
+                currentIndex = (currentIndex + 1) % views.length;
+                switchView(durations);
+            }, duration);
+        } else {
+            // If the duration is 0 or undefined, immediately switch to the next view
+            currentIndex = (currentIndex + 1) % views.length;
+            switchView(durations);
+        }
+    });
+
+    // If the URL is already loaded (e.g., from cache), the did-finish-load event may not trigger again,
+    // so you might want to manually trigger the next view switch in such cases.
+    // This can be done by checking if the webContents is already in a "complete" readyState,
+    // indicating the page has loaded, and then manually calling the logic to switch to the next view.
+    if (currentView.webContents.getURL() && currentView.webContents.isLoading() === false) {
+        console.log(`View ${currentIndex} is already loaded, manually triggering switch.`);
+        // Manually trigger the switch logic if needed
+        clearTimeout(timeoutId); // Ensure no double timeout
+        timeoutId = setTimeout(() => {
+            currentIndex = (currentIndex + 1) % views.length;
+            switchView(durations);
+        }, durations[currentIndex] !== undefined ? durations[currentIndex] * 1000 : 0);
+    }
+}
+
+
+app.on('ready', () => {
     mainWindow = new BrowserWindow({
         fullscreen: true,
-        show: false,
+        backgroundColor: '#232227',
         webPreferences: {
-            nodeIntegration: true
+            preload: path.join(__dirname, 'preload.js'),
+            nodeIntegration: true,
+            contextIsolation: false // Adjust according to security needs
         }
     });
 
-    // Hide the menu bar
-    mainWindow.setMenuBarVisibility(false);
-    mainWindow.setAutoHideMenuBar(true);
-    mainWindow.setMenu(null);
-    
-    mainWindow.loadURL(url);
-    mainWindow.once('ready-to-show', () => {
-        mainWindow.setFullScreen(true); // Set the window to full screen once it's ready to show
-        mainWindow.show();
-    });
-/*
-    mainWindow.webContents.on('did-finish-load', () => {
-        mainWindow.webContents.insertCSS("body { cursor: none; }");
-    });
-*/
-    mainWindow.on('closed', function () {
-        mainWindow = null;
-    });
-}
+    // Create a BrowserView for the initial URL
+    createView(defaultUrl);
 
-let windows = [];
-let timeoutId;
+    // Switch to the first view with indefinite display
+    switchView([0]);
+});
 
-// Handle multiple URL changes with different durations
+// Handle POST request to change URLs with durations
 server.post('/set_urls', (req, res) => {
-    const urls = req.body.urls;
-    const durations = req.body.durations;
+    const { urls, durations } = req.body;
 
     if (urls.length !== durations.length) {
-        res.json({ success: false, message: 'The number of URLs and durations must be the same.' });
-        return;
+        return res.json({ success: false, message: 'URLs and durations count mismatch.' });
     }
 
-    // Close the mainWindow
-    if (mainWindow) {
-        mainWindow.close();
-    }
+    clearTimeout(timeoutId); // Clear any existing timeouts
+    views.forEach(view => view.webContents.destroy()); // Clean up previous views
+    views = [];
+    urls.forEach(createView);
 
-    // Clear any existing timeouts and close previous windows except for the background
-    if (timeoutId) {
-        clearTimeout(timeoutId);
-    }
-    windows.forEach(win => {
-        if (win !== backgroundWindow) { // Ensure not to close the background window
-            win.close();
-        }
-    });
-    windows = []; // Reset the windows array, keeping only the background window
+    currentIndex = 0; // Reset the index
+    switchView(durations); // Start the cycle with the new URLs
 
-    // Create a new BrowserWindow for each URL
-    urls.forEach((url, index) => {
-        let win = new BrowserWindow({
-            show: false,
-            autoHideMenuBar: true,
-            backgroundColor: '#A9A9A9', // Set the background color to 'dark gray
-            webPreferences: {
-                nodeIntegration: true,
-                nodeIntegrationInWorker: true
-            }
-        });
-
-        win.loadURL(url);
-
-        // Wait for the window to be ready before showing it in full screen mode
-        win.once('ready-to-show', () => {
-            win.setFullScreen(true);
-            if (index === 0) {
-                win.show();
-            }
-        });
-
-        windows.push(win);
-    });
-
-    // Cycle through the windows according to the specified durations
-    let currentIndex = 0;
-    const displayNextWindow = () => {
-        //windows[currentIndex].hide();
-        
-        currentIndex = (currentIndex + 1) % windows.length;
-        //windows[currentIndex].show();
-        windows[currentIndex].moveTop();
-
-        // If the duration is 0, display the URL indefinitely
-        if (durations[currentIndex] !== 0) {
-            timeoutId = setTimeout(displayNextWindow, durations[currentIndex] * 1000);
-        }
-    };
-
-    // Start the cycle with the first URL
-    if (durations[0] !== 0) {
-        timeoutId = setTimeout(displayNextWindow, durations[0] * 1000);
-    }
-
-    res.json({ success: true, urls: urls, durations: durations });
+    res.json({ success: true, urls, durations });
 });
 
 server.listen(defaultPort, () => {
     console.log(`Server running on port ${defaultPort}`);
 });
 
-app.on('ready', () => createWindow(defaultUrl));
-
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit();
     }
 });
-
-app.on('activate', () => {
-    
-    if (mainWindow === null) {
-        createWindow(defaultUrl);
-    }
-});
-
-
-/*
-
-In Electron, when a BrowserWindow is hidden, its rendering is paused but the page stays loaded in memory. So, when you hide and then show a window, the page should appear just as it was before it was hidden.
-
-However, if you're experiencing issues with pages not staying loaded when their window is not in the foreground, it might be due to the web pages themselves. Some web pages might unload or reset their content when they lose focus or visibility, and there's not much you can do about this in Electron.
-
-If you're trying to keep a page active even when its window is not in the foreground, you might need to use a different approach. Instead of using multiple windows and showing/hiding them, you could use a single window and load the different URLs in an offscreen BrowserView. Then, you can switch the BrowserView instances in and out of the window as needed. This should keep the pages active even when they're not currently being displayed.
-
-Please note that this approach is more complex and might not work for all use cases. It also has its own set of limitations and potential issues, such as increased memory usage.
-
-*/

@@ -1,5 +1,5 @@
 @echo on
-
+REM This file must be copied up one level from the Node-Browser directory for future use.
 REM Recursively delete the folder .\Node-Browser
 rmdir /s /q ".\Node-Browser"
 
