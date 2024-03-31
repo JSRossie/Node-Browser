@@ -1,4 +1,4 @@
 {
     "port": 5001,
-    "url": "https://google.com"
+    "defaultURL": "https://google.com"
 }

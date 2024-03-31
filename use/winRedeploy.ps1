@@ -1,4 +1,9 @@
 # PowerShell script to redeploy the Node-Browser application on Windows
+# Usage: .\redeploy.ps1 -branch dev 
+
+param (
+    [string]$branch = 'main'  # Default branch is 'main'
+)
 
 # Set the script to stop on any errors
 $ErrorActionPreference = 'Stop'
@@ -20,9 +25,9 @@ Try {
         Remove-Item -Path $nodeBrowserPath -Recurse -Force
     }
 
-    # Clone the repository
+    # Clone the repository with the specified branch
     Write-Host "Cloning the Node-Browser repository..."
-    git clone https://github.com/JSRossie/Node-Browser.git $nodeBrowserPath
+    git clone --branch $branch https://github.com/JSRossie/Node-Browser.git $nodeBrowserPath
 
     # Change to the cloned directory
     Set-Location -Path $nodeBrowserPath
