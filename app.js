@@ -23,6 +23,8 @@ const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { app: electronApp, BrowserWindow, BrowserView } = require('electron');
+const { debounce } = require('lodash'); 
+
 const path = require('path');
 
 // Initialize configuration data
@@ -114,9 +116,7 @@ function switchView(urlDurations) {
     timeoutId = setTimeout(() => switchView(urlDurations), duration);
 }
 
-// Initialize the Electron application
 electronApp.on('ready', () => {
-    // Create the main window with specific properties
     mainWindow = new BrowserWindow({
         fullscreen: true,
         backgroundColor: '#232227',
@@ -126,14 +126,23 @@ electronApp.on('ready', () => {
             contextIsolation: true
         }
     });
-    mainWindow.setMenu(null); // Disable the default menu
+    mainWindow.setMenu(null);
 
-    // Create and display the initial view based on the default URL
     const initialView = createView(defaultUrl);
-    // Ensure the initial view is visible once it has finished loading
     initialView.webContents.once('did-finish-load', () => {
         setViewVisible(initialView);
     });
+
+    // Debounced function to re-enable fullscreen mode
+    const ensureFullscreen = debounce(() => {
+        if (!mainWindow.isFullScreen()) {
+            mainWindow.setFullScreen(true);
+        }
+    }, 300); // 300 milliseconds
+
+    // Event listeners to ensure the window remains in fullscreen mode
+    mainWindow.on('resize', ensureFullscreen);
+    mainWindow.on('move', ensureFullscreen);
 });
 
 // Endpoint to set URLs and durations for the views
