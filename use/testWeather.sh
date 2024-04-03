@@ -2,6 +2,16 @@
 
 # Script to send embedded JSON data to a specified endpoint using curl.
 
+# Check if a host argument was provided
+if [[ -z "$1" ]]; then
+    echo "Usage: $0 <HOST>"
+    exit 1
+fi
+
+# Host parameter
+HOST="$1"
+
+
 # JSON data embedded directly into the script
 jsonData='[
     {
@@ -23,7 +33,7 @@ jsonData='[
 ]'
 
 # Endpoint URL
-url="http://192.168.92.101:5001/set_urls"
+url="http://$1:5001/set_urls"
 
 # Use curl to send the JSON data as a POST request to the endpoint
 curl -X POST "$url" \
