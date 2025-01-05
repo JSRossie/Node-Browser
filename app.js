@@ -25,6 +25,9 @@ const bodyParser = require('body-parser');
 const { app: electronApp, BrowserWindow, BrowserView } = require('electron');
 const path = require('path');
 
+// Disabled HW accelleration for Windows 11 screen orientation handeling
+electronApp.disableHardwareAcceleration();
+
 // Initialize configuration data
 let configData = '{}';
 try {
