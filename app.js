@@ -29,9 +29,9 @@ const path = require('path');
 //electronApp.commandLine.appendSwitch('ignore-gpu-blacklist'); // Force GPU acceleration even if blacklisted
 //electronApp.commandLine.appendSwitch('enable-gpu-rasterization'); // Enable GPU rasterization
 //electronApp.commandLine.appendSwitch('enable-zero-copy'); // Optimize texture uploads
-//electronApp.commandLine.appendSwitch('use-gl', 'angle'); // Optional: Use ANGLE for rendering (alternative to OpenGL)
+electronApp.commandLine.appendSwitch('use-gl', 'angle'); // Optional: Use ANGLE for rendering (alternative to OpenGL)
 //electronApp.commandLine.appendSwitch('disable-gpu-compositing'); // Alternative rendering path
-electronApp.commandLine.appendSwitch('use-vulkan');
+//electronApp.commandLine.appendSwitch('use-vulkan');
 
 // Initialize configuration data
 let configData = '{}';
