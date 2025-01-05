@@ -128,7 +128,7 @@ function switchView(urlDurations) {
 electronApp.on('ready', () => {
     // Create the main window with specific properties
     mainWindow = new BrowserWindow({
-        kiosk: false,
+        kiosk: true,
         backgroundColor: '#232227',
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
