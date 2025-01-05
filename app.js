@@ -30,7 +30,7 @@ electronApp.commandLine.appendSwitch('ignore-gpu-blacklist'); // Force GPU accel
 electronApp.commandLine.appendSwitch('enable-gpu-rasterization'); // Enable GPU rasterization
 electronApp.commandLine.appendSwitch('enable-zero-copy'); // Optimize texture uploads
 electronApp.commandLine.appendSwitch('use-gl', 'angle'); // Optional: Use ANGLE for rendering (alternative to OpenGL)
-electronApp.commandLine.appendSwitch('disable-gpu-compositing'); // Alternative rendering path
+//electronApp.commandLine.appendSwitch('disable-gpu-compositing'); // Alternative rendering path
 
 // Disabled HW accelleration for Windows 11 screen orientation handeling
 // electronApp.disableHardwareAcceleration();
