@@ -129,6 +129,7 @@ electronApp.on('ready', () => {
     // Create the main window with specific properties
     mainWindow = new BrowserWindow({
         fullscreen: false,
+        frame: false,
         maximizable: true,
         backgroundColor: '#232227',
         webPreferences: {
