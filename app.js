@@ -135,11 +135,11 @@ electronApp.on('ready', () => {
             nodeIntegration: false,
             contextIsolation: true,
             webgl: true,
-            experimentalFeatures: true
+            experimentalFeatures: true,
+            disableHtmlFullscreenWindowResize: true, // Prevent resizing issues
         }
     });
     mainWindow.setMenu(null); // Disable the default menu
-    mainWindow.webContents.setZoomFactor(2.0); // Adjust this if needed
 
     // Create and display the initial view based on the default URL
     const initialView = createView(defaultUrl);
