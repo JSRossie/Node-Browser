@@ -26,7 +26,7 @@ const { app: electronApp, BrowserWindow, BrowserView } = require('electron');
 const path = require('path');
 
 // Disabled HW accelleration for Windows 11 screen orientation handeling
-electronApp.disableHardwareAcceleration();
+// electronApp.disableHardwareAcceleration();
 
 // Initialize configuration data
 let configData = '{}';
@@ -59,7 +59,9 @@ function createView(url) {
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
-            contextIsolation: true
+            contextIsolation: true,
+            webgl: true, // Enable WebGL
+            experimentalFeatures: true // Enable experimental features
         }
     });
 
@@ -126,7 +128,9 @@ electronApp.on('ready', () => {
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
-            contextIsolation: true
+            contextIsolation: true,
+            webgl: true, // Enable WebGL
+            experimentalFeatures: true // Enable experimental features
         }
     });
     mainWindow.setMenu(null); // Disable the default menu
