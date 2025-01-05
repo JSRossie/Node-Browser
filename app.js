@@ -25,6 +25,12 @@ const bodyParser = require('body-parser');
 const { app: electronApp, BrowserWindow, BrowserView } = require('electron');
 const path = require('path');
 
+// Enable specific GPU features and overrides for hardware acceleration
+electronApp.commandLine.appendSwitch('ignore-gpu-blacklist'); // Force GPU acceleration even if blacklisted
+electronApp.commandLine.appendSwitch('enable-gpu-rasterization'); // Enable GPU rasterization
+electronApp.commandLine.appendSwitch('enable-zero-copy'); // Optimize texture uploads
+electronApp.commandLine.appendSwitch('use-gl', 'angle'); // Optional: Use ANGLE for rendering (alternative to OpenGL)
+
 // Disabled HW accelleration for Windows 11 screen orientation handeling
 // electronApp.disableHardwareAcceleration();
 
