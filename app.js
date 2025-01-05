@@ -139,7 +139,7 @@ electronApp.on('ready', () => {
         }
     });
     mainWindow.setMenu(null); // Disable the default menu
-    mainWindow.webContents.setZoomFactor(1.0); // Adjust this if needed
+    mainWindow.webContents.setZoomFactor(2.0); // Adjust this if needed
 
     // Create and display the initial view based on the default URL
     const initialView = createView(defaultUrl);
