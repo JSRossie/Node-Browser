@@ -128,7 +128,6 @@ function switchView(urlDurations) {
 electronApp.on('ready', () => {
     // Create the main window with specific properties
     mainWindow = new BrowserWindow({
-        kiosk: true,
         backgroundColor: '#232227',
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
@@ -138,6 +137,7 @@ electronApp.on('ready', () => {
             experimentalFeatures: true
         }
     });
+    mainWindow.setFullScreen(true);
     mainWindow.setMenu(null); // Disable the default menu
 
     // Create and display the initial view based on the default URL
