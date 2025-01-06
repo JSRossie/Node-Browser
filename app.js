@@ -25,8 +25,13 @@ const bodyParser = require('body-parser');
 const { app: electronApp, BrowserWindow, BrowserView } = require('electron');
 const path = require('path');
 
-// Disabled HW accelleration for Windows 11 screen orientation handeling
-electronApp.disableHardwareAcceleration();
+// Enable specific GPU features and overrides for hardware acceleration
+electronApp.commandLine.appendSwitch('ignore-gpu-blacklist'); // Force GPU acceleration even if blacklisted
+electronApp.commandLine.appendSwitch('enable-gpu-rasterization'); // Enable GPU rasterization
+electronApp.commandLine.appendSwitch('enable-zero-copy'); // Optimize texture uploads
+electronApp.commandLine.appendSwitch('use-gl', 'angle'); // Optional: Use ANGLE for rendering (alternative to OpenGL)
+//electronApp.commandLine.appendSwitch('disable-gpu-compositing'); // Alternative rendering path
+//electronApp.commandLine.appendSwitch('use-vulkan');
 
 // Initialize configuration data
 let configData = '{}';
@@ -59,7 +64,9 @@ function createView(url) {
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
-            contextIsolation: true
+            contextIsolation: true,
+            webgl: true, // Enable WebGL
+            experimentalFeatures: true // Enable experimental features
         }
     });
 
@@ -121,14 +128,19 @@ function switchView(urlDurations) {
 electronApp.on('ready', () => {
     // Create the main window with specific properties
     mainWindow = new BrowserWindow({
-        fullscreen: true,
+        fullscreen: false,
+        frame: false,
+        maximizable: true,
         backgroundColor: '#232227',
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
-            contextIsolation: true
+            contextIsolation: true,
+            webgl: true,
+            experimentalFeatures: true
         }
     });
+    mainWindow.maximize();
     mainWindow.setMenu(null); // Disable the default menu
 
     // Create and display the initial view based on the default URL
