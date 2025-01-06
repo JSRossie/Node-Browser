@@ -1,6 +1,6 @@
 {
   "name": "Node-Browser",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "This app creates a simple web server using Node.js and Express, and then opens a browser window using Electron. The URL can then be set remotely.",
   "main": "app.js",
   "scripts": {
