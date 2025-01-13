@@ -92,6 +92,18 @@ function createElectronApp(defaultUrl, onReadyCallback) {
             }
         });
 
+        // Set a custom User-Agent for all network requests
+        const { session } = mainWindow.webContents;
+        session.webRequest.onBeforeSendHeaders((details, callback) => {
+            details.requestHeaders['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
+            callback({ cancel: false, requestHeaders: details.requestHeaders });
+        });
+
+        // Optional: Log outgoing requests for debugging
+        session.webRequest.onSendHeaders((details) => {
+            console.log('Request Headers:', details.requestHeaders);
+        });
+
         mainWindow.maximize();
         mainWindow.setMenu(null);
 
