@@ -17,7 +17,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (config.hideCursor) {
             body.style.cursor = 'none';
         }
-        /*
+        
         // Specific URL condition for adsbexchange.com
         const targetURL = "http://globe.adsbexchange.com?icao=a2dc22&airport=KAUS&hideSidebar&hideButtons&zoom=8&iconScale=2";
         if (window.location.href === targetURL) {
@@ -31,5 +31,5 @@ window.addEventListener('DOMContentLoaded', () => {
     } else {
         console.error('Unable to find the body element to apply styles.');
     }
-        */
+        
 });
